@@ -1,21 +1,23 @@
 package monitor;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.ServiceLoader.Provider;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import monitor.observer.ServiceObserver;
-import monitor.observer.alpha.AlphaServiceObserver;
-import monitor.observer.beta.BetaServiceObserver;
+import monitor.observer.ServiceObserverFactory;
 import monitor.persistence.StatisticsRepository;
 import monitor.rest.MonitorServer;
 import monitor.statistics.Statistician;
 import monitor.statistics.Statistics;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 public class Main {
 
@@ -48,13 +50,16 @@ public class Main {
 		return new Monitor(observers, statistician, repository, initialStatistics);
 	}
 
-	private static Optional<ServiceObserver> createObserver(String serviceName) {
-		return AlphaServiceObserver.createIfAlphaService(serviceName)
-				.or(() -> BetaServiceObserver.createIfBetaService(serviceName))
-				.or(() -> {
-					System.out.printf("No observer for %s found.%n", serviceName);
-					return Optional.empty();
-				});
-	}
+  private static Optional<ServiceObserver> createObserver(String serviceName) {
+    List<ServiceObserverFactory> observerFactories = ServiceLoader
+        .load(ServiceObserverFactory.class).stream()
+        .map(Provider::get)
+        .collect(Collectors.toList());
+    return observerFactories.stream()
+        .map(f -> f.createIfMatchingService(serviceName))
+        .filter(Optional::isPresent)
+        .flatMap(Optional::stream)
+        .findFirst();
+  }
 
 }

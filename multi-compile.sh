@@ -18,6 +18,12 @@ javac \
 	-d classes \
 	--module monitor
 
+# Since they aren't "required" in any module-info.java file, these two modules
+# won't be captured by compiling the monitor module above. Therefore, they must
+# be built separately.
+javac --module-path mods --module-source-path "./*/src/main/java" -d classes --module monitor.observer.alpha
+javac --module-path mods --module-source-path "./*/src/main/java" -d classes --module monitor.observer.beta
+
 echo " > packaging modules"
 jar --create \
 	--file mods/monitor.observer.jar \

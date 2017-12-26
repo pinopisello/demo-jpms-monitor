@@ -1,11 +1,10 @@
 package monitor.observer.alpha;
 
+import java.time.ZonedDateTime;
+import java.util.Random;
+
 import monitor.observer.DiagnosticDataPoint;
 import monitor.observer.ServiceObserver;
-
-import java.time.ZonedDateTime;
-import java.util.Optional;
-import java.util.Random;
 
 public class AlphaServiceObserver implements ServiceObserver {
 
@@ -15,13 +14,6 @@ public class AlphaServiceObserver implements ServiceObserver {
 
 	AlphaServiceObserver(String serviceName) {
 		this.serviceName = serviceName;
-	}
-
-	public static Optional<ServiceObserver> createIfAlphaService(String service) {
-		return Optional.of(service)
-				// this check should do something more sensible
-				.filter(s -> s.contains("alpha"))
-				.map(AlphaServiceObserver::new);
 	}
 
 	@Override
