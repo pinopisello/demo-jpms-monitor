@@ -2,8 +2,6 @@ package monitor.statistics;
 
 import monitor.observer.DiagnosticDataPoint;
 
-import java.util.stream.Stream;
-
 public class Statistician {
 
 	public Statistics emptyStatistics() {
