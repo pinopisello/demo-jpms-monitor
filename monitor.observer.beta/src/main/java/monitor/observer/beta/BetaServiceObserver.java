@@ -1,10 +1,11 @@
 package monitor.observer.beta;
 
-import java.time.ZonedDateTime;
-import java.util.Random;
-
 import monitor.observer.DiagnosticDataPoint;
 import monitor.observer.ServiceObserver;
+
+import java.time.ZonedDateTime;
+import java.util.Optional;
+import java.util.Random;
 
 public class BetaServiceObserver implements ServiceObserver {
 
@@ -14,6 +15,13 @@ public class BetaServiceObserver implements ServiceObserver {
 
 	BetaServiceObserver(String serviceName) {
 		this.serviceName = serviceName;
+	}
+
+	public static Optional<ServiceObserver> createIfBetaService(String service) {
+		return Optional.of(service)
+				// this check should do something more sensible
+				.filter(s -> s.contains("beta"))
+				.map(BetaServiceObserver::new);
 	}
 
 	@Override

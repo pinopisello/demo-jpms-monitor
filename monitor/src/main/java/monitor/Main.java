@@ -1,6 +1,11 @@
 package monitor;
 
-import static java.util.stream.Collectors.toList;
+import monitor.observer.ServiceObserver;
+import monitor.observer.ServiceObserverFactory;
+import monitor.persistence.StatisticsRepository;
+import monitor.rest.MonitorServer;
+import monitor.statistics.Statistician;
+import monitor.statistics.Statistics;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,15 +14,9 @@ import java.util.ServiceLoader.Provider;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import monitor.observer.ServiceObserver;
-import monitor.observer.ServiceObserverFactory;
-import monitor.persistence.StatisticsRepository;
-import monitor.rest.MonitorServer;
-import monitor.statistics.Statistician;
-import monitor.statistics.Statistics;
+import static java.util.stream.Collectors.toList;
 
 public class Main {
 
@@ -39,8 +38,12 @@ public class Main {
 	}
 
 	private static Monitor createMonitor() {
-		List<ServiceObserver> observers = Stream.of("alpha-1", "alpha-2", "alpha-3", "beta-1")
-				.map(Main::createObserver)
+		List<ServiceObserverFactory> observerFactories = ServiceLoader
+				.load(ServiceObserverFactory.class).stream()
+				.map(Provider::get)
+				.collect(toList());
+		List<ServiceObserver> observers = Stream.of("0-patient", "alpha-1", "alpha-2", "alpha-3", "beta-1")
+				.map(serviceName -> createObserver(observerFactories, serviceName))
 				.flatMap(Optional::stream)
 				.collect(toList());
 		Statistician statistician = new Statistician();
@@ -50,16 +53,12 @@ public class Main {
 		return new Monitor(observers, statistician, repository, initialStatistics);
 	}
 
-  private static Optional<ServiceObserver> createObserver(String serviceName) {
-    List<ServiceObserverFactory> observerFactories = ServiceLoader
-        .load(ServiceObserverFactory.class).stream()
-        .map(Provider::get)
-        .collect(Collectors.toList());
-    return observerFactories.stream()
-        .map(f -> f.createIfMatchingService(serviceName))
-        .filter(Optional::isPresent)
-        .flatMap(Optional::stream)
-        .findFirst();
-  }
+	private static Optional<ServiceObserver> createObserver(
+			List<ServiceObserverFactory> observerFactories, String serviceName) {
+
+		return observerFactories.stream()
+				.flatMap(factory -> factory.createIfMatchingService(serviceName).stream())
+				.findFirst();
+	}
 
 }
