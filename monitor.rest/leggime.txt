@@ -1,0 +1,14 @@
+MonitorServer dipende da spark-core.jar che NON e' mudulare!! (manca module-info.java)
+
+Si risolve con maven plugin maven-dependency-plugin che copia il jar in demo-jpms-monitor/mods-mvn.
+
+Poi si deve aggiungere tale path come --module-path cosi che tale jar diventi un "automatic module"  e venga 
+trovato dal compiler.
+
+Per evitare errori compilazione IDE, demo-jpms-monitor/mods-mvn va aggiunto come module-path in 
+  properties->java build path->module path -> add external folder
+
+
+
+
+
